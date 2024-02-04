@@ -13,15 +13,12 @@ float myAssign_VAR(float input)
 
 int main()
 {
-	float GLOBALgoal[7];
-	float GLOBALPOS[7];
-	
-		GLOBALgoal[0] = GLOBALPOS[0];
-		GLOBALgoal[1] = GLOBALPOS[1];
-		GLOBALgoal[2] = GLOBALPOS[2];
-		GLOBALgoal[3] = GLOBALPOS[3];
-		GLOBALgoal[4] = GLOBALPOS[4];
-		GLOBALgoal[5] = GLOBALPOS[5];
-		GLOBALgoal[6] = GLOBALPOS[6];
+	float val1[7], val2[7];
+
+	for (int i =0; i<7 ; i++)
+	{
+		val1[i] = 0;
+		val2[i] = val1[i];
+	}
 	return 0;
 }
