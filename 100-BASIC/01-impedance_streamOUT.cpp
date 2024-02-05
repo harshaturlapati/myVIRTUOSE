@@ -29,8 +29,8 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 #define DEFAULT_BUFLEN 512
-#define SEND_PORT 27015
-#define RECV_PORT 27016
+#define SEND_PORT 27017
+#define RECV_PORT 27018
 
 // Include for RECV
 #ifndef UNICODE
@@ -65,8 +65,6 @@ int iResult2 = 0;
 
 SOCKET RecvSocket;
 struct sockaddr_in RecvAddr;
-
-unsigned short Port2 = 27016;
 
 char RecvBuf[1024];
 int BufLen = 1024;
