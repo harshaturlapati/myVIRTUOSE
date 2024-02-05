@@ -164,20 +164,20 @@ int initialize_Winsock()
 }
 
 
-void UDP_send_recv()
+void UDP_send_recv(float* pos)
 {
 	int delimiter_idx = 0;
 	float UDP_q[7];
 
 	// Defining the UDP send
 	float num_TOSEND[7];
-	num_TOSEND[0] = 0;
-	num_TOSEND[1] = 0;
-	num_TOSEND[2] = 0;
-	num_TOSEND[3] = 0;
-	num_TOSEND[4] = 0;
-	num_TOSEND[5] = 0;
-	num_TOSEND[6] = 0;
+	num_TOSEND[0] = pos[0];
+	num_TOSEND[1] = pos[1];
+	num_TOSEND[2] = pos[2];
+	num_TOSEND[3] = pos[3];
+	num_TOSEND[4] = pos[4];
+	num_TOSEND[5] = pos[5];
+	num_TOSEND[6] = pos[6];
 
 	//int num_TOSEND_idx = 0;
 	std::string sendbuf1;
@@ -238,7 +238,7 @@ int main()
 {
 
 	initialize_Winsock();
-	UDP_send_recv();
+	
 
 	//printf("hello world\n");
 	VirtContext VC;
@@ -271,22 +271,27 @@ int main()
 	// Define a goal
 	while (j < 100)
 	{
+		
 		float myPOS[7];
 		virtGetPosition(VC, myPOS);
 		for (int i = 0; i <= 6; i++) {
 			des_X[i] = myPOS[i];
 		}
+		UDP_send_recv(myPOS);
 		Sleep(1); // Very important or the virtGetPosition does not seem to work.
 		j = j + 1;
 	}
 
 	// Impedance control
 	int i = 0;
-	while (i < 2000)
+	while (i < 200000)
 	{
+		
 		float position[7], speed[6], force[6];
 
 		virtGetPosition(VC, position); //std::cout << "q1 = " << position[0] << "q2 = " << position[1] << "q3 = " << position[2] << "q4 = " << position[3] << "q5 = " << position[4] << "q6 = " << position[5] <<  "q7 = " << position[6] << std::endl;
+
+		UDP_send_recv(position);
 
 		for (int idx = 0; idx <= 2; idx++) {
 			force[idx] = K[idx] * (des_X[idx] - position[idx]);
@@ -296,7 +301,8 @@ int main()
 		force[4] = 0;
 		force[5] = 0;
 
-		//std::cout << "goal1 = " << des_X[0] << "goal2 = " << des_X[1] << "goal3 = " << des_X[2] << std::endl; //std::cout << "f1 = " << force[0] << "f2 = " << force[1] << "f3 = " << force[2] << "f4 = " << force[3] << "f5 = " << force[4] << "f6 = " << force[5] << std::endl;
+		std::cout << "goal1 = " << des_X[0] << "goal2 = " << des_X[1] << "goal3 = " << des_X[2] << std::endl; 
+		std::cout << "f1 = " << force[0] << "f2 = " << force[1] << "f3 = " << force[2] << "f4 = " << force[3] << "f5 = " << force[4] << "f6 = " << force[5] << std::endl;
 
 		//virtSetForce(VC, force);
 		Sleep(1);
