@@ -162,20 +162,20 @@ int initialize_Winsock()
 }
 
 
-void UDP_send_recv(float* pos)
+void UDP_send_recv(float* input_pos)
 {
 	int delimiter_idx = 0;
 	float UDP_q[7];
 
 	// Defining the UDP send
 	float num_TOSEND[7];
-	num_TOSEND[0] = pos[0];
-	num_TOSEND[1] = pos[1];
-	num_TOSEND[2] = pos[2];
-	num_TOSEND[3] = pos[3];
-	num_TOSEND[4] = pos[4];
-	num_TOSEND[5] = pos[5];
-	num_TOSEND[6] = pos[6];
+	num_TOSEND[0] = input_pos[0];
+	num_TOSEND[1] = input_pos[1];
+	num_TOSEND[2] = input_pos[2];
+	num_TOSEND[3] = input_pos[3];
+	num_TOSEND[4] = input_pos[4];
+	num_TOSEND[5] = input_pos[5];
+	num_TOSEND[6] = input_pos[6];
 
 	//int num_TOSEND_idx = 0;
 	std::string sendbuf1;
