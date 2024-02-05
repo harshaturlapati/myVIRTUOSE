@@ -13,11 +13,11 @@ stemWidth = 1*mm;
 SPACE = eye(4);
 
 %% Receive Socket
-PORT = 27015;
+PORT = 27017;
 u = udpport("IPV4","LocalHost","127.0.0.1",'LocalPort',PORT)
 
 u2 = udp
-u2.RemotePort = 27016
+u2.RemotePort = 27018
 fopen(u2)
 
 curr_q = zeros(1,7);
