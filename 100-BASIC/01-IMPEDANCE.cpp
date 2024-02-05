@@ -24,7 +24,7 @@ int main()
 	virtSetSpeedFactor(VC, 1.0f);
 	virtSetTimeStep(VC, 0.003f);
 	virtSetBaseFrame(VC, identity);
-	virtSetObservationFrame(VC, identity);
+	//virtSetObservationFrame(VC, identity);
 	virtSetCommandType(VC, COMMAND_TYPE_IMPEDANCE);
 	virtSetPowerOn(VC, 1);
 
@@ -50,7 +50,7 @@ int main()
 	
 	// Impedance control
 	int i = 0;
-	while (i < 2000)
+	while (i < 200000)
 	{
 		float position[7], speed[6], force[6];
 
@@ -64,7 +64,7 @@ int main()
 		force[4] = 0;
 		force[5] = 0;
 
-		//std::cout << "goal1 = " << des_X[0] << "goal2 = " << des_X[1] << "goal3 = " << des_X[2] << std::endl; //std::cout << "f1 = " << force[0] << "f2 = " << force[1] << "f3 = " << force[2] << "f4 = " << force[3] << "f5 = " << force[4] << "f6 = " << force[5] << std::endl;
+		std::cout << "goal1 = " << des_X[0] << "goal2 = " << des_X[1] << "goal3 = " << des_X[2] << std::endl; std::cout << "f1 = " << force[0] << "f2 = " << force[1] << "f3 = " << force[2] << "f4 = " << force[3] << "f5 = " << force[4] << "f6 = " << force[5] << std::endl;
 
 		virtSetForce(VC, force);
 		Sleep(1);
