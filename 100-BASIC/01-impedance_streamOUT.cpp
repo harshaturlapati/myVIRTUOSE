@@ -105,7 +105,7 @@ int initialize_Winsock()
 	//read_timeout.tv_usec = 10;
 	//setsockopt(RecvSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&read_timeout, sizeof read_timeout);
 
-	iVal = 1; // if you set this too low, the recvsocket will be impatient and might not 
+	iVal = 1; // if you set this too low, the recvsocket will be impatient and might not receive at all, because its too fast to listen.
 	ret = setsockopt(RecvSocket, SOL_SOCKET, SO_RCVTIMEO, (char*)&iVal, sz);
 
 	if (RecvSocket == INVALID_SOCKET) {
@@ -158,7 +158,7 @@ int initialize_Winsock()
 
 	printf("Bytes Sent: %ld\n", iResult);
 
-
+	return 0;
 }
 
 
