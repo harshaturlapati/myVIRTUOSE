@@ -247,6 +247,15 @@ void write_to_file_v3(int64_t unix_epoch[], double time_log[], int duration, int
 
 // LOGGING statements end
 
+// UDP Receive global variables
+std::string UDPsendbuf;
+const char* sendbuf3;
+float num_TOSEND[7];
+int num_TOSEND_idx;
+std::string delimiter = "||";
+float num_float;
+size_t STRINGpos;
+std::string token;
 
 // Set up UDP - starts
 //----------------------
@@ -278,8 +287,7 @@ int ret, iVal = 1;
 unsigned int  sz = sizeof(iVal);
 // Set up UDP - ends
 
-
-
+// STATEMENTS to include for UDP - non-blocking - start
 int initialize_Winsock()
 {
 	//----------------------
@@ -301,16 +309,13 @@ int initialize_Winsock()
 
 	// Create a receiver socket to receive datagrams - RECV
 	RecvSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+	// Make port non-blocking - VERY IMPORTANT
 	unsigned long ul = 1;
 	int           nRet;
-	nRet = ioctlsocket(RecvSocket, FIONBIO, (unsigned long*)&ul); // make it non-blocking
+	nRet = ioctlsocket(RecvSocket, FIONBIO, (unsigned long*)&ul);
 
-	//struct timeval read_timeout;
-	//read_timeout.tv_sec = 0;
-	//read_timeout.tv_usec = 10;
-	//setsockopt(RecvSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&read_timeout, sizeof read_timeout);
-
-	iVal = 1; // if you set this too low, the recvsocket will be impatient and might not receive at all, because its too fast to listen.
+	iVal = 1; // if you set this too low, the recvsocket will be impatient and might not 
 	ret = setsockopt(RecvSocket, SOL_SOCKET, SO_RCVTIMEO, (char*)&iVal, sz);
 
 	if (RecvSocket == INVALID_SOCKET) {
@@ -361,81 +366,67 @@ int initialize_Winsock()
 		return 1;
 	}
 
-	printf("Bytes Sent: %ld\n", iResult);
+	//printf("Bytes Sent: %ld\n", iResult);
 
-	return 0;
+
 }
 
-
-void UDP_send_recv(float* input_pos)
+void UDP_send_recv_v3(float* input_pos)
 {
 	int delimiter_idx = 0;
 
+	UDPsendbuf = "";
+	UDPsendbuf.append("q_start"); // string to send
 
-	// Defining the UDP send
-	float num_TOSEND[7];
-	num_TOSEND[0] = input_pos[0];
-	num_TOSEND[1] = input_pos[1];
-	num_TOSEND[2] = input_pos[2];
-	num_TOSEND[3] = input_pos[3];
-	num_TOSEND[4] = input_pos[4];
-	num_TOSEND[5] = input_pos[5];
-	num_TOSEND[6] = input_pos[6];
+	for (num_TOSEND_idx = 0; num_TOSEND_idx < 7; num_TOSEND_idx++) {
+		num_TOSEND[num_TOSEND_idx] = input_pos[num_TOSEND_idx];
+		UDPsendbuf.append(std::to_string(num_TOSEND[num_TOSEND_idx]));
+		UDPsendbuf.append("||");
 
-	//int num_TOSEND_idx = 0;
-	std::string sendbuf1;
-	std::string sendbuf2;
-	sendbuf2.append("q_start");
-	//= "STRING_TO_SEND:";
-	for (int num_TOSEND_idx = 0; num_TOSEND_idx < 7; num_TOSEND_idx++) {
-		sendbuf1 = std::to_string(num_TOSEND[num_TOSEND_idx]);
-		sendbuf2.append(sendbuf1);
-		sendbuf2.append("||");
 	}
-	sendbuf2.append("q_end");
+	UDPsendbuf.append("q_end");
 
 	// UDP part - start
-	const char* sendbuf3 = sendbuf2.c_str();
-	wprintf(L"Sending datagrams...\n");
+	//wprintf(L"Sending datagrams...\n");
+
+	sendbuf3 = UDPsendbuf.c_str();
 
 	iResult = send(ConnectSocket, sendbuf3, (int)strlen(sendbuf3), 0);
-	wprintf(L"datagrams sent...\n");
+	//wprintf(L"datagrams sent...\n");
 	iResult2 = recvfrom(RecvSocket,
 		RecvBuf, BufLen, 0, (SOCKADDR*)&SenderAddr, &SenderAddrSize);
+
+	//iResult2 = recv(RecvSocket, RecvBuf, BufLen, 0);
 
 
 	if (iResult2 > 0) // print recvbuffer ONLY if something was received
 	{
-		wprintf(L"Received datagrams...\n");
+		//wprintf(L"Received datagrams...\n");
 
-		std::cout << RecvBuf << std::endl;
+		//std::cout << RecvBuf << std::endl;
 		std::string myMATLAB_DATA(RecvBuf);
-		std::string delimiter = "||";
-		size_t pos = 0;
-		std::string token;
+
+		STRINGpos = 0;
+		token = "";
 		delimiter_idx = 0;
-		while ((pos = myMATLAB_DATA.find(delimiter)) != std::string::npos) {
-			token = myMATLAB_DATA.substr(0, pos);
-
-			float num_float = std::stof(token);
-
+		while ((STRINGpos = myMATLAB_DATA.find(delimiter)) != std::string::npos) {
+			token = myMATLAB_DATA.substr(0, STRINGpos);
+			num_float = std::stof(token);
 			UDP_f[delimiter_idx] = num_float;
 
-			myMATLAB_DATA.erase(0, pos + delimiter.length());
+			myMATLAB_DATA.erase(0, STRINGpos + delimiter.length());
 			delimiter_idx++;
 			if (delimiter_idx > 6)
 			{
 				break;
 			}
 		}
-
 		std::cout << "q1 =" << UDP_f[0] << " q2 =" << UDP_f[1] << " q3 =" << UDP_f[2] << " q4 =" << UDP_f[3] << " q5 =" << UDP_f[4] << " q6 =" << UDP_f[5] << " q7 =" << UDP_f[6] << std::endl;
-
 	}
-	
 	// UDP part - end
 
 }
+// STATEMENTS to include for UDP - non-blocking - end
 
 
 
@@ -503,7 +494,7 @@ int main()
 		
 		time_log[data_count] = GetTickUs();
 		virtGetPosition(VC, position);
-		UDP_send_recv(position);
+		UDP_send_recv_v3(position);
 		unix_epoch[data_count] = timestamp; // Make sure GetTickUs() is called before timestamp is recorded into unix_epoch.
 		
 		for (int idx = 0; idx <= 2; idx++) {
