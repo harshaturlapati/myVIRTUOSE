@@ -64,8 +64,8 @@ int64_t timestamp = duration_cast<nanoseconds>(system_clock::now().time_since_ep
 constexpr auto TIMEOUT_DURATION = std::chrono::seconds(20);
 float time_duration = DURATION; // Duration of the example (seconds)
 
-float UDP_f[7];
-float position[7];
+float UDP_f[dim_f];
+float position[dim_CART];
 
 double time_log[DURATION * 1000]{};
 int64_t unix_epoch[DURATION * 1000]{};
@@ -416,13 +416,21 @@ void UDP_send_recv_v3(float* input_pos)
 
 			myMATLAB_DATA.erase(0, STRINGpos + delimiter.length());
 			delimiter_idx++;
-			if (delimiter_idx > 6)
+			if (delimiter_idx > dim_f - 1)
 			{
 				break;
 			}
 		}
-		std::cout << "q1 =" << UDP_f[0] << " q2 =" << UDP_f[1] << " q3 =" << UDP_f[2] << " q4 =" << UDP_f[3] << " q5 =" << UDP_f[4] << " q6 =" << UDP_f[5] << " q7 =" << UDP_f[6] << std::endl;
+		std::cout << "UDPf1 =" << UDP_f[0] << " UDPf2 =" << UDP_f[1] << " UDPf3 =" << UDP_f[2] << " UDPf4 =" << UDP_f[3] << " UDPf5 =" << UDP_f[4] << " UDPf6 =" << UDP_f[5]  << std::endl;
 	}
+	else
+	{
+		// if no UDP communication occurred, set rendering force to 0
+		for (int f_idx = 0; f_idx < dim_f; f_idx++) {
+			UDP_f[f_idx] = 0;
+		}
+	}
+
 	// UDP part - end
 
 }
