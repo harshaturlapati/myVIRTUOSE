@@ -1,36 +1,82 @@
-
 #include <myINCLUDES.h>         // baked in
 #include <myEXP_settings.h>     // baked in
 #include "VirtuoseAPI.h"        
+#include <myLOGGING.h>
 
-//#define SEND_PORT 27017
-//#define RECV_PORT 27018
-
-using namespace std::chrono;
-int64_t timestamp = duration_cast<nanoseconds>(system_clock::now().time_since_epoch()).count();
-
-//#include <myLOGGING.h>
+#define DURATION 1000
+// 2024-02-09 : Figure out a way to add these to myVIRTUOSE_LOG and avoid the stack overflow error
+double              time_log[DURATION * 1000] = {};
+int64_t             unix_epoch[DURATION * 1000] = {};
+float               UDP_f_log[DURATION * 1000][6] = {};
+float               force_log[DURATION * 1000][6] = {};
+float               Virtuose_POS_log[DURATION * 1000][7] = {};
 
 class myVIRTUOSE_LOG
 {
 public:
-    static const int    dim_CART               =   7;
-    static const int    dim_f                  =   6;
-    static const int    DURATION               =   400; // Network timeout (seconds)
-    
-    double              time_log[DURATION * 1000]{};
-    int64_t             unix_epoch[DURATION * 1000]{};
-    float               UDP_f_log[6 * 1000][dim_f]{};
-    float               force_log[DURATION * 1000][dim_f]{};
-    float               Virtuose_POS_log[DURATION * 1000][dim_CART]{};
+    int                 data_count = 0;
+    static const int    dim_CART = 7;
+    static const int    dim_f = 6;
+    double              justnow;
+    int64_t             timestamp;
+
+    int64_t GetTickUs()
+    {
+        #if defined(_MSC_VER)
+                LARGE_INTEGER start, frequency;
+
+                QueryPerformanceFrequency(&frequency);
+                QueryPerformanceCounter(&start);
+
+                timestamp = duration_cast<nanoseconds>(system_clock::now().time_since_epoch()).count();
+
+                return (start.QuadPart * 1000000) / frequency.QuadPart;
+        #else
+                struct timespec start;
+                clock_gettime(CLOCK_MONOTONIC, &start);
+
+                return (start.tv_sec * 1000000LLU) + (start.tv_nsec / 1000);
+        #endif
+    }
+
+    void write2LOG(int data_count_in, float position[7], float force[6], float UDP_f[6])
+    {
+        data_count = data_count_in;
+
+        // Data logging starts
+
+        time_log[data_count] = GetTickUs();
+
+        unix_epoch[data_count] = timestamp; // Make sure GetTickUs() is called before timestamp is recorded into unix_epoch.
+        
+        for (int i = 0; i < dim_CART; i++)
+        {
+        	Virtuose_POS_log[data_count][i] = position[i];
+        }
+        
+        for (int i = 0; i < dim_f; i++)
+        {
+        	force_log[data_count][i] = force[i];
+            UDP_f_log[data_count][i] = UDP_f[i];
+        }
+        
+    }
+
+    myVIRTUOSE_LOG(int count) {
+        data_count = count;
+        justnow = GetTickUs();
+    }
 };
 
 class myVIRTUOSE_UDP
 {
 private:
-    // UDP Receive global variables
-    float UDP_f[6] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    
+    
 
+public:
+
+    // UDP Receive global variables
     std::string UDPsendbuf;
     const char* sendbuf3;
     float num_TOSEND[7];
@@ -39,7 +85,7 @@ private:
     float num_float;
     size_t STRINGpos;
     std::string token;
-    
+
     u_short SEND_PORT;
     u_short RECV_PORT;
     const char* SEND_IP_ADDRESS;
@@ -70,9 +116,13 @@ private:
 
     int ret, iVal = 1;
     unsigned int  sz = sizeof(iVal);
-    
 
-public:
+
+
+
+
+
+    float UDP_f[6] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f };
     void setup_UDP()
     {
         // define Winsock2 object
@@ -254,73 +304,15 @@ public:
 
 };
 
-
-//
-//	while (!(GetKeyState('Q') & 0x8000))
-//	{
-//		
-//		float speed[6], force[6];
-//		
-//		time_log[data_count] = GetTickUs();
-//		virtGetPosition(VC, position);
-//		UDP_send_recv_v3(position);
-//		unix_epoch[data_count] = timestamp; // Make sure GetTickUs() is called before timestamp is recorded into unix_epoch.
-//		
-//		for (int idx = 0; idx <= 2; idx++) {
-//			force[idx] = K[idx] * (des_X[idx] - position[idx]);
-//		}
-//
-//		force[3] = 0;
-//		force[4] = 0;
-//		force[5] = 0;
-//
-//		std::cout << "goal1 = " << des_X[0] << "goal2 = " << des_X[1] << "goal3 = " << des_X[2] << std::endl;
-//		std::cout << "f1 = " << force[0] << "f2 = " << force[1] << "f3 = " << force[2] << "f4 = " << force[3] << "f5 = " << force[4] << "f6 = " << force[5] << std::endl;
-//
-//		// Data logging starts
-//
-//		for (i = 0; i < dim_CART; i++)
-//		{
-//			Virtuose_POS_log[data_count][i] = position[i];
-//		}
-//
-//		for (i = 0; i < dim_f; i++)
-//		{
-//			force_log[data_count][i] = force[i];
-//		}
-//
-//		for (i = 0; i < dim_f; i++)
-//		{
-//			UDP_f_log[data_count][i] = UDP_f[i];
-//		}
-//		
-//		// Data logging ends
-//		//virtSetForce(VC, force);
-//		//Sleep(0.0001);
-//		data_count = data_count + 1;
-//
-//		
-//		
-//	}
-//	virtSetPowerOn(VC, 0);
-//	virtClose(VC);
-//
-
-//	time_t now_t = time(0);
-//	std::string file_name = "virtuose_log_file_";
-//
-//	write_to_file_v3(unix_epoch, time_log, time_duration, data_count, now_t, file_name);
-//
-//	return 0;
-//}
-
 class CMD {
 
 private:
+    
+
+public:
     float k, b;
     float K[7], B[7];
 
-public:
     float X_d[7];
     float X[7], Xdot[7];
     float F_e[6] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
@@ -402,11 +394,11 @@ public:
 
 class MyVIRTUOSE {                          // The class
     private:
-        VirtContext VC;
-        float X[7];
-        float f[6] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
         
     public:                                 // Access specifier
+        VirtContext VC;
+        float X[7];
+        float f[6] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f };
         const char* PORT;                                       // myAttributes
         float forcefactor, speedfactor, dt;                     // force factor, speed factor, and sampling rate - VERY IMPORTANT
         float identity[7] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f };
@@ -550,8 +542,6 @@ int main() {
     myVIRTUOSE_UDP myUDP(27017, 27018, "127.0.0.1", "127.0.0.1");
     float input_pos[7] = { 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f };
     myUDP.setup_UDP();
-    myUDP.UDP_send_recv_v3(input_pos);
-    myUDP.cleanup();
     
     // Virtuose object attributes
     const char* myPORT = "127.0.0.1#53210";
@@ -573,13 +563,33 @@ int main() {
         cmd_R.X_d[i] = RightARM.getPOS()[i];
     }
 
+    myVIRTUOSE_LOG RightARM_LOG(0);
+
+    int data_count = 0;
     printf("Press Q to exit loop\n");
     while (!(GetKeyState('Q') & 0x8000))
     {
-        cmd_R.P_trn(cmd_R.X_d, RightARM.getPOS());
+        myUDP.UDP_send_recv_v3(RightARM.getPOS());
+
+        cmd_R.P_trn(cmd_R.X_d, RightARM.X);
+        
+        //RightARM_LOG.write2LOG(data_count, cmd_R.X, cmd_R.f, myUDP.UDP_f);
+        
         // RightARM.sendCMD_f(cmd_R.f); // issues the commanded force and resets the force variable also
+        
+        data_count = data_count + 1;
     }
 
+    myUDP.cleanup();
+    RightARM.quick_stop();
+    
+
+
+    //	time_t now_t = time(0);
+    //	std::string file_name = "virtuose_log_file_";
+    //
+    //	write_to_file_v3(unix_epoch, time_log, time_duration, data_count, now_t, file_name);
+    
 
 	//// Impedance control
 	//int data_count = 0;
