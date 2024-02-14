@@ -36,6 +36,7 @@ int main() {
     // Command structure object
     CMD cmd_R(k, b);
 
+    // capture x_desired
     for (int i = 0; i < 7; i++) {
         cmd_R.X_d[i] = RightARM.getPOS()[i];
     }
@@ -55,7 +56,7 @@ int main() {
         
         RightARM_LOG.write2LOG(data_count, cmd_R.X, cmd_R.f, myUDP.UDP_f);
         
-        // RightARM.sendCMD_f(cmd_R.f); // issues the commanded force and resets the force variable also
+        //RightARM.sendCMD_f(cmd_R.f); // issues the commanded force and resets the force variable also
         
         data_count = data_count + 1;
     }
